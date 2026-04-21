@@ -6,7 +6,8 @@ import {
   Send, 
   AlertTriangle,
   Smartphone,
-  Loader2
+  Loader2,
+  Maximize2
 } from 'lucide-react';
 
 // --- Configuration ---
@@ -30,14 +31,13 @@ export default function App() {
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
   const [error, setError] = useState(null);
 
-  // Initial load
   useEffect(() => {
     fetchVideos("Newest Music Mix 2024 Trending");
   }, []);
 
   const fetchVideos = async (query, keyIndex = 0) => {
     if (keyIndex >= API_KEYS.length) {
-        setError("All API keys exhausted. Add more keys.");
+        setError("All API keys exhausted.");
         setLoading(false);
         return;
     }
@@ -48,9 +48,7 @@ export default function App() {
 
     try {
         const res = await fetch(url);
-        if (res.status === 403) {
-            return fetchVideos(query, keyIndex + 1);
-        }
+        if (res.status === 403) return fetchVideos(query, keyIndex + 1);
         const data = await res.json();
         if (data.items) {
             setVideos(data.items);
@@ -73,6 +71,18 @@ export default function App() {
       channel: video.snippet.channelTitle
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Full Screen Toggle function for better mobile rotation
+  const toggleFullScreen = () => {
+    const iframe = document.getElementById('player-frame');
+    if (iframe.requestFullscreen) {
+      iframe.requestFullscreen();
+    } else if (iframe.webkitRequestFullscreen) {
+      iframe.webkitRequestFullscreen();
+    } else if (iframe.msRequestFullscreen) {
+      iframe.msRequestFullscreen();
+    }
   };
 
   const handleDownload = (id, type = 'y2mate') => {
@@ -100,7 +110,7 @@ export default function App() {
             <input 
               type="text" 
               placeholder="Search music..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 px-10 text-sm focus:outline-none focus:ring-1 focus:ring-red-600 transition appearance-none"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 px-10 text-sm focus:outline-none focus:ring-1 focus:ring-red-600 transition"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -108,7 +118,7 @@ export default function App() {
           </form>
 
           <div className="flex items-center shrink-0">
-            <a href={APK_DOWNLOAD_URL} className="bg-white text-black p-2 md:px-4 md:py-2 rounded-full text-[10px] font-black flex items-center gap-2 hover:bg-red-600 hover:text-white transition shadow-lg uppercase tracking-tight">
+            <a href={APK_DOWNLOAD_URL} className="bg-white text-black p-2 md:px-4 md:py-2 rounded-full text-[10px] font-black flex items-center gap-2 hover:bg-red-600 hover:text-white transition uppercase tracking-tight">
               <Smartphone size={14} /> <span className="hidden md:inline">APK Download</span>
             </a>
           </div>
@@ -117,30 +127,33 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto pt-20 px-0 md:px-4 pb-20 text-left">
         
-        {error && (
-          <div className="mx-4 mb-6 bg-red-900/20 border border-red-600/30 p-4 rounded-xl text-red-400 text-sm flex items-center gap-2">
-            <AlertTriangle size={16} /> {error}
-          </div>
-        )}
-
         {currentVideo ? (
           <section className="mb-8 animate-in fade-in duration-500">
-            {/* Player Container */}
-            <div className="relative w-full aspect-video bg-black md:rounded-2xl overflow-hidden border-b md:border border-white/5 shadow-2xl">
+            <div className="relative w-full aspect-video bg-black md:rounded-2xl overflow-hidden shadow-2xl">
               {videoLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-10">
                   <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-2" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Loading Stream...</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Fast Loading...</p>
                 </div>
               )}
+              {/* Added playsinline and picture-in-picture for background attempt */}
               <iframe 
-                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1&showinfo=0&vq=hd1080`}
+                id="player-frame"
+                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1&showinfo=0&vq=hd720&playsinline=1`}
                 className="absolute inset-0 w-full h-full"
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
                 title="RKB Player"
                 onLoad={() => setVideoLoading(false)}
               />
+              
+              {/* FullScreen Button for Mobile Rotation Fix */}
+              <button 
+                onClick={toggleFullScreen}
+                className="absolute bottom-4 right-4 z-20 bg-black/60 p-2 rounded-full border border-white/20 md:hidden"
+              >
+                <Maximize2 size={16} />
+              </button>
             </div>
             
             <div className="mt-4 px-4 flex flex-col md:flex-row justify-between items-start gap-4">
@@ -158,12 +171,6 @@ export default function App() {
                 >
                   <Download size={14} /> Download Music
                 </button>
-                <button 
-                  onClick={() => handleDownload(currentVideo.id, '9xbuddy')}
-                  className="flex-1 md:flex-none bg-zinc-900 hover:bg-zinc-800 border border-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition active:scale-95"
-                >
-                   Backup
-                </button>
               </div>
             </div>
           </section>
@@ -173,33 +180,32 @@ export default function App() {
 
         <div className="flex items-center gap-2 mb-6 px-4">
           <div className="w-1 h-5 bg-red-600 rounded-full" />
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Up Next / Trending</h2>
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Discover Tracks</h2>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-0 md:px-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="aspect-video bg-zinc-900 md:rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
-          /* Grid updated: 1 column on mobile, 2 on tablet, 3 on desktop for larger thumbnails */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-8 md:gap-x-6 md:gap-y-10">
+          /* Mobile: 1 Column, Tablet: 2, Desktop: 3 for massive thumbnails */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10 md:gap-x-6">
             {videos.map((v) => (
               <div 
                 key={v.id.videoId} 
                 onClick={() => selectVideo(v)} 
                 className="group cursor-pointer text-left"
               >
-                <div className="relative aspect-video md:rounded-xl overflow-hidden bg-zinc-900 border-y md:border border-white/5 shadow-lg group-hover:shadow-red-600/10 transition duration-500">
+                <div className="relative aspect-video md:rounded-2xl overflow-hidden bg-zinc-900 border-y md:border border-white/5 shadow-lg">
                   <img 
                     src={v.snippet.thumbnails.high ? v.snippet.thumbnails.high.url : v.snippet.thumbnails.medium.url} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-700 grayscale-[0.2] group-hover:grayscale-0" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-700 grayscale-[0.1] group-hover:grayscale-0" 
                     alt=""
-                    loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
-                    <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-xl transform translate-y-4 group-hover:translate-y-0 transition duration-500">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                    <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-xl">
                        <Play size={20} fill="white" />
                     </div>
                   </div>
@@ -219,33 +225,20 @@ export default function App() {
       <footer className="border-t border-white/5 py-12 text-center bg-[#050505]">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-6">
           <h1 className="text-2xl font-black tracking-tighter italic">RKB<span className="text-red-600">.</span></h1>
-          <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-            <a href={TELEGRAM_URL} target="_blank" rel="noreferrer" className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-2">
-              <Send size={12} className="text-blue-500" /> Support
+          <div className="flex justify-center gap-4">
+            <a href={TELEGRAM_URL} target="_blank" className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-2">
+              <Send size={12} className="text-blue-500" /> Telegram
             </a>
-            <span className="hidden md:block text-zinc-800">|</span>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-              Server Status: <span className="text-green-500">Online</span>
-            </p>
           </div>
-          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PRO PLAYER EXPERIENCE</p>
+          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PRO EXPERIENCE</p>
         </div>
       </footer>
 
       <style dangerouslySetInnerHTML={{ __html: `
         body { -webkit-tap-highlight-color: transparent; overflow-x: hidden; scroll-behavior: smooth; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #dc2626; }
-        
         iframe { background: black; }
-        
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: .5; }
-        }
-        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
       `}} />
     </div>
   );
