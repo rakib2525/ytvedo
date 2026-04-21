@@ -31,7 +31,7 @@ export default function App() {
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
   const [error, setError] = useState(null);
 
-  // Initial load
+  // Initial load - Simplified for faster start
   useEffect(() => {
     fetchVideos("Newest Music Mix 2024 Trending");
   }, []);
@@ -45,7 +45,8 @@ export default function App() {
 
     setLoading(true);
     const activeKey = API_KEYS[keyIndex];
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=24&q=${encodeURIComponent(query)}&type=video&key=${activeKey}`;
+    // reduced maxResults to speed up desktop load
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=18&q=${encodeURIComponent(query)}&type=video&key=${activeKey}`;
 
     try {
         const res = await fetch(url);
@@ -75,13 +76,18 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleDownload = (id) => {
+    // 9xbuddy er bodole y2mate use kora hocche direct link er jonno
+    window.open(`https://www.y2mate.com/youtube/${id}`, '_blank');
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-red-600/30">
+    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-red-600/30 overflow-x-hidden">
       
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.location.reload()}>
+          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => window.location.reload()}>
             <div className="bg-red-600 p-1.5 rounded-lg shadow-lg shadow-red-600/20">
               <Play size={18} fill="white" />
             </div>
@@ -99,9 +105,9 @@ export default function App() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
           </form>
 
-          <div className="flex items-center">
+          <div className="flex items-center shrink-0">
             <a href={APK_DOWNLOAD_URL} className="bg-white text-black p-2 md:px-4 md:py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-600 hover:text-white transition shadow-lg">
-              <Smartphone size={14} /> <span className="hidden md:inline font-black uppercase tracking-tighter">Get App</span>
+              <Smartphone size={14} /> <span className="hidden md:inline font-black uppercase tracking-tighter tracking-tight">APK Download</span>
             </a>
           </div>
         </div>
@@ -117,14 +123,15 @@ export default function App() {
 
         {currentVideo ? (
           <section className="mb-8 animate-in fade-in duration-500">
-            {/* Player Container - Optimized for Full View on Mobile */}
+            {/* Player Container - Optimized for Desktop & Mobile Speed */}
             <div className="relative w-full aspect-video bg-black md:rounded-2xl overflow-hidden border-b md:border border-white/5 shadow-2xl">
               <iframe 
-                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&rel=0&modestbranding=1&preload=auto`}
+                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&rel=0&modestbranding=1&vq=hd720`}
                 className="absolute inset-0 w-full h-full"
                 allow="autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
                 title="Video Player"
+                loading="eager"
               />
             </div>
             
@@ -138,10 +145,10 @@ export default function App() {
               </div>
               <div className="flex gap-2 w-full md:w-auto">
                 <button 
-                  onClick={() => window.open(`https://9xbuddy.com/process?url=https://www.youtube.com/watch?v=${currentVideo.id}`)}
+                  onClick={() => handleDownload(currentVideo.id)}
                   className="flex-1 md:flex-none bg-zinc-900 hover:bg-zinc-800 border border-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition active:scale-95"
                 >
-                  <Download size={14} /> Save Video
+                  <Download size={14} /> Download Music
                 </button>
               </div>
             </div>
@@ -152,7 +159,7 @@ export default function App() {
 
         <div className="flex items-center gap-2 mb-6 px-4">
           <div className="w-1 h-5 bg-red-600 rounded-full" />
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Discover Tracks</h2>
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Trending Playlist</h2>
         </div>
 
         {loading ? (
@@ -172,10 +179,11 @@ export default function App() {
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-900 border border-white/5">
                   <img 
                     src={v.snippet.thumbnails.medium.url} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700 grayscale-[0.5] group-hover:grayscale-0" 
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700 grayscale-[0.2] group-hover:grayscale-0" 
                     alt=""
+                    loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
                     <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-xl">
                        <Play size={16} fill="white" />
                     </div>
@@ -198,25 +206,24 @@ export default function App() {
           <h1 className="text-2xl font-black tracking-tighter italic">RKB<span className="text-red-600">.</span></h1>
           <div className="flex flex-wrap justify-center gap-4 md:gap-8">
             <a href={TELEGRAM_URL} target="_blank" rel="noreferrer" className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-2">
-              <Send size={12} className="text-blue-500" /> Telegram Support
+              <Send size={12} className="text-blue-500" /> Support
             </a>
             <span className="hidden md:block text-zinc-800">|</span>
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-              Server: <span className="text-red-600">{currentKeyIndex + 1}</span> / {API_KEYS.length} Active
+              Server: <span className="text-red-600">{currentKeyIndex + 1}</span> / {API_KEYS.length}
             </p>
           </div>
-          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PREMIUM PLAYER</p>
+          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PRO PLAYER</p>
         </div>
       </footer>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        body { -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        body { -webkit-tap-highlight-color: transparent; overflow-x: hidden; scroll-behavior: smooth; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #dc2626; }
         
-        /* Smooth Loading */
         iframe { background: black; }
       `}} />
     </div>
