@@ -8,7 +8,8 @@ import {
   ExternalLink,
   ChevronDown,
   Smartphone,
-  Maximize
+  Maximize,
+  Loader2
 } from 'lucide-react';
 
 // --- Configuration ---
@@ -28,10 +29,11 @@ export default function App() {
   const [videos, setVideos] = useState([]);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
   const [error, setError] = useState(null);
 
-  // Initial load - Simplified for faster start
+  // Initial load
   useEffect(() => {
     fetchVideos("Newest Music Mix 2024 Trending");
   }, []);
@@ -45,7 +47,6 @@ export default function App() {
 
     setLoading(true);
     const activeKey = API_KEYS[keyIndex];
-    // reduced maxResults to speed up desktop load
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=18&q=${encodeURIComponent(query)}&type=video&key=${activeKey}`;
 
     try {
@@ -68,6 +69,7 @@ export default function App() {
 
   const selectVideo = (video) => {
     const videoId = video.id.videoId || video.id;
+    setVideoLoading(true);
     setCurrentVideo({
       id: videoId,
       title: video.snippet.title,
@@ -77,7 +79,7 @@ export default function App() {
   };
 
   const handleDownload = (id) => {
-    // 9xbuddy er bodole y2mate use kora hocche direct link er jonno
+    // Better Direct Downloader for Music/Video
     window.open(`https://www.y2mate.com/youtube/${id}`, '_blank');
   };
 
@@ -91,13 +93,13 @@ export default function App() {
             <div className="bg-red-600 p-1.5 rounded-lg shadow-lg shadow-red-600/20">
               <Play size={18} fill="white" />
             </div>
-            <h1 className="text-xl font-black tracking-tighter">RKB<span className="text-red-600">.</span></h1>
+            <h1 className="text-xl font-black tracking-tighter uppercase italic">RKB<span className="text-red-600">.</span></h1>
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); fetchVideos(searchQuery); }} className="flex-1 max-w-md relative">
             <input 
               type="text" 
-              placeholder="Search..."
+              placeholder="Search music..."
               className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 px-10 text-sm focus:outline-none focus:ring-1 focus:ring-red-600 transition appearance-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -106,8 +108,8 @@ export default function App() {
           </form>
 
           <div className="flex items-center shrink-0">
-            <a href={APK_DOWNLOAD_URL} className="bg-white text-black p-2 md:px-4 md:py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-600 hover:text-white transition shadow-lg">
-              <Smartphone size={14} /> <span className="hidden md:inline font-black uppercase tracking-tighter tracking-tight">APK Download</span>
+            <a href={APK_DOWNLOAD_URL} className="bg-white text-black p-2 md:px-4 md:py-2 rounded-full text-[10px] font-black flex items-center gap-2 hover:bg-red-600 hover:text-white transition shadow-lg uppercase tracking-tight">
+              <Smartphone size={14} /> <span className="hidden md:inline">APK Download</span>
             </a>
           </div>
         </div>
@@ -123,15 +125,21 @@ export default function App() {
 
         {currentVideo ? (
           <section className="mb-8 animate-in fade-in duration-500">
-            {/* Player Container - Optimized for Desktop & Mobile Speed */}
+            {/* Player Container - Speed Optimized */}
             <div className="relative w-full aspect-video bg-black md:rounded-2xl overflow-hidden border-b md:border border-white/5 shadow-2xl">
+              {videoLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-10">
+                  <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-2" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Loading Stream...</p>
+                </div>
+              )}
               <iframe 
-                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&rel=0&modestbranding=1&vq=hd720`}
+                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&modestbranding=1&showinfo=0&rel=0&iv_load_policy=3&vq=hd720`}
                 className="absolute inset-0 w-full h-full"
-                allow="autoplay; encrypted-media; picture-in-picture"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
-                title="Video Player"
-                loading="eager"
+                title="RKB Player"
+                onLoad={() => setVideoLoading(false)}
               />
             </div>
             
@@ -159,7 +167,7 @@ export default function App() {
 
         <div className="flex items-center gap-2 mb-6 px-4">
           <div className="w-1 h-5 bg-red-600 rounded-full" />
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Trending Playlist</h2>
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Recommended Tracks</h2>
         </div>
 
         {loading ? (
@@ -176,15 +184,15 @@ export default function App() {
                 onClick={() => selectVideo(v)} 
                 className="group cursor-pointer text-left"
               >
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-900 border border-white/5">
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-900 border border-white/5 shadow-lg group-hover:shadow-red-600/10 transition duration-500">
                   <img 
                     src={v.snippet.thumbnails.medium.url} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700 grayscale-[0.2] group-hover:grayscale-0" 
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700 grayscale-[0.3] group-hover:grayscale-0" 
                     alt=""
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
-                    <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-xl">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
+                    <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-xl transform translate-y-2 group-hover:translate-y-0 transition duration-500">
                        <Play size={16} fill="white" />
                     </div>
                   </div>
@@ -210,10 +218,10 @@ export default function App() {
             </a>
             <span className="hidden md:block text-zinc-800">|</span>
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-              Server: <span className="text-red-600">{currentKeyIndex + 1}</span> / {API_KEYS.length}
+              Server Status: <span className="text-green-500">Online</span> ({currentKeyIndex + 1}/{API_KEYS.length})
             </p>
           </div>
-          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PRO PLAYER</p>
+          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PRO PLAYER EXPERIENCE</p>
         </div>
       </footer>
 
@@ -225,6 +233,13 @@ export default function App() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #dc2626; }
         
         iframe { background: black; }
+        
+        /* Skeleton Animation */
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
+        }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
       `}} />
     </div>
   );
