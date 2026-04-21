@@ -7,11 +7,11 @@ import {
   AlertTriangle,
   ExternalLink,
   ChevronDown,
-  Smartphone
+  Smartphone,
+  Maximize
 } from 'lucide-react';
 
 // --- Configuration ---
-// API Keys list - একটি শেষ হলে অন্যটি কাজ করবে
 const API_KEYS = [
   "AIzaSyCCT46NIV0ko9z_12BoGRjLZDk3JcMNvEM",
   "AIzaSyAOt6uR432IX1Ir_j97Jc2U6cClx3W9oDQ",
@@ -28,7 +28,6 @@ export default function App() {
   const [videos, setVideos] = useState([]);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
   const [error, setError] = useState(null);
 
@@ -77,106 +76,149 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
+    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-red-600/30">
       
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/5 px-4 py-4">
+      <nav className="fixed top-0 w-full z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.location.reload()}>
-            <div className="bg-red-600 p-2 rounded-xl shadow-lg shadow-red-600/20">
-              <Play size={20} fill="white" />
+            <div className="bg-red-600 p-1.5 rounded-lg shadow-lg shadow-red-600/20">
+              <Play size={18} fill="white" />
             </div>
-            <h1 className="text-2xl font-black tracking-tighter hidden sm:block">RKB<span className="text-red-600">.</span></h1>
+            <h1 className="text-xl font-black tracking-tighter">RKB<span className="text-red-600">.</span></h1>
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); fetchVideos(searchQuery); }} className="flex-1 max-w-2xl relative">
+          <form onSubmit={(e) => { e.preventDefault(); fetchVideos(searchQuery); }} className="flex-1 max-w-md relative">
             <input 
               type="text" 
-              placeholder="Search music..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2.5 px-10 focus:outline-none focus:ring-1 focus:ring-red-600 transition"
+              placeholder="Search..."
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 px-10 text-sm focus:outline-none focus:ring-1 focus:ring-red-600 transition appearance-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
           </form>
 
-          <div className="flex items-center gap-2">
-            <a href={APK_DOWNLOAD_URL} className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-600 hover:text-white transition">
-              <Smartphone size={14} /> <span className="hidden md:inline">Download App</span>
+          <div className="flex items-center">
+            <a href={APK_DOWNLOAD_URL} className="bg-white text-black p-2 md:px-4 md:py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-red-600 hover:text-white transition shadow-lg">
+              <Smartphone size={14} /> <span className="hidden md:inline font-black uppercase tracking-tighter">Get App</span>
             </a>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto pt-24 px-4 pb-20 text-left">
+      <main className="max-w-7xl mx-auto pt-20 px-0 md:px-4 pb-20 text-left">
         
         {error && (
-          <div className="mb-6 bg-red-900/20 border border-red-600/30 p-4 rounded-xl text-red-400 text-sm flex items-center gap-2">
+          <div className="mx-4 mb-6 bg-red-900/20 border border-red-600/30 p-4 rounded-xl text-red-400 text-sm flex items-center gap-2">
             <AlertTriangle size={16} /> {error}
           </div>
         )}
 
-        {currentVideo && (
-          <section className="mb-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+        {currentVideo ? (
+          <section className="mb-8 animate-in fade-in duration-500">
+            {/* Player Container - Optimized for Full View on Mobile */}
+            <div className="relative w-full aspect-video bg-black md:rounded-2xl overflow-hidden border-b md:border border-white/5 shadow-2xl">
               <iframe 
-                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1`}
-                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&rel=0&modestbranding=1&preload=auto`}
+                className="absolute inset-0 w-full h-full"
+                allow="autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
+                title="Video Player"
               />
             </div>
-            <div className="mt-4 flex flex-col md:flex-row justify-between items-start gap-4">
-              <div className="text-left">
-                <h2 className="text-xl font-bold">{currentVideo.title}</h2>
-                <p className="text-red-600 text-xs font-bold uppercase mt-1">{currentVideo.channel}</p>
+            
+            <div className="mt-4 px-4 flex flex-col md:flex-row justify-between items-start gap-4">
+              <div className="flex-1">
+                <h2 className="text-lg md:text-xl font-black leading-tight tracking-tight uppercase italic">{currentVideo.title}</h2>
+                <p className="text-red-600 text-[10px] font-black uppercase tracking-[0.2em] mt-1 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
+                  {currentVideo.channel}
+                </p>
               </div>
-              <button 
-                onClick={() => window.open(`https://9xbuddy.com/process?url=https://www.youtube.com/watch?v=${currentVideo.id}`)}
-                className="bg-zinc-800 hover:bg-zinc-700 px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition"
-              >
-                <Download size={16} /> DOWNLOAD VIDEO
-              </button>
+              <div className="flex gap-2 w-full md:w-auto">
+                <button 
+                  onClick={() => window.open(`https://9xbuddy.com/process?url=https://www.youtube.com/watch?v=${currentVideo.id}`)}
+                  className="flex-1 md:flex-none bg-zinc-900 hover:bg-zinc-800 border border-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition active:scale-95"
+                >
+                  <Download size={14} /> Save Video
+                </button>
+              </div>
             </div>
           </section>
+        ) : (
+           <div className="hidden md:block py-10"></div>
         )}
 
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-1 h-6 bg-red-600 rounded-full" />
-          <h2 className="text-lg font-black uppercase tracking-tighter">Recommended for you</h2>
+        <div className="flex items-center gap-2 mb-6 px-4">
+          <div className="w-1 h-5 bg-red-600 rounded-full" />
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Discover Tracks</h2>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 px-2 md:px-0">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="aspect-video bg-zinc-900 rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-2 md:gap-x-4 gap-y-6 px-2 md:px-0">
             {videos.map((v) => (
-              <div key={v.id.videoId} onClick={() => selectVideo(v)} className="group cursor-pointer text-left">
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-900">
-                  <img src={v.snippet.thumbnails.medium.url} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+              <div 
+                key={v.id.videoId} 
+                onClick={() => selectVideo(v)} 
+                className="group cursor-pointer text-left"
+              >
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-900 border border-white/5">
+                  <img 
+                    src={v.snippet.thumbnails.medium.url} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700 grayscale-[0.5] group-hover:grayscale-0" 
+                    alt=""
+                  />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                    <Play size={20} fill="white" />
+                    <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-xl">
+                       <Play size={16} fill="white" />
+                    </div>
                   </div>
                 </div>
-                <h3 className="mt-2 text-[11px] font-bold line-clamp-2 leading-snug group-hover:text-red-500 transition">{v.snippet.title}</h3>
-                <p className="text-[9px] text-zinc-500 mt-1 uppercase font-medium">{v.snippet.channelTitle}</p>
+                <div className="mt-2 px-1">
+                  <h3 className="text-[10px] md:text-[11px] font-black line-clamp-2 leading-tight group-hover:text-red-500 transition uppercase italic tracking-tighter">
+                    {v.snippet.title}
+                  </h3>
+                  <p className="text-[8px] text-zinc-600 mt-1 uppercase font-bold tracking-widest truncate">{v.snippet.channelTitle}</p>
+                </div>
               </div>
             ))}
           </div>
         )}
       </main>
 
-      <footer className="border-t border-white/5 py-10 text-center">
-        <h1 className="text-xl font-black">RKB<span className="text-red-600">.</span></h1>
-        <div className="flex justify-center gap-4 mt-4">
-          <a href={TELEGRAM_URL} className="text-[10px] font-bold text-zinc-500 hover:text-white uppercase tracking-widest">Telegram Support</a>
-          <span className="text-zinc-800">|</span>
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Server {currentKeyIndex + 1} Active</p>
+      <footer className="border-t border-white/5 py-12 text-center bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-6">
+          <h1 className="text-2xl font-black tracking-tighter italic">RKB<span className="text-red-600">.</span></h1>
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+            <a href={TELEGRAM_URL} target="_blank" rel="noreferrer" className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-2">
+              <Send size={12} className="text-blue-500" /> Telegram Support
+            </a>
+            <span className="hidden md:block text-zinc-800">|</span>
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+              Server: <span className="text-red-600">{currentKeyIndex + 1}</span> / {API_KEYS.length} Active
+            </p>
+          </div>
+          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PREMIUM PLAYER</p>
         </div>
       </footer>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        body { -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #dc2626; }
+        
+        /* Smooth Loading */
+        iframe { background: black; }
+      `}} />
     </div>
   );
 }
