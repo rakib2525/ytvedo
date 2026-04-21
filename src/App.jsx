@@ -232,7 +232,7 @@ export default function App() {
               <Send size={12} className="text-blue-500" /> Telegram
             </a>
           </div>
-          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PRO EXPERIENCE</p>
+          <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2026 RKB PRO EXPERIENCE</p>
         </div>
       </footer>
 
