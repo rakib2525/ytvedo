@@ -73,24 +73,28 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Full Screen Toggle function for better mobile rotation
-  const toggleFullScreen = () => {
+  // Full Screen & Auto Rotate function for Mobile
+  const toggleFullScreen = async () => {
     const iframe = document.getElementById('player-frame');
-    if (iframe.requestFullscreen) {
-      iframe.requestFullscreen();
-    } else if (iframe.webkitRequestFullscreen) {
-      iframe.webkitRequestFullscreen();
-    } else if (iframe.msRequestFullscreen) {
-      iframe.msRequestFullscreen();
+    try {
+      if (iframe.requestFullscreen) {
+        await iframe.requestFullscreen();
+      } else if (iframe.webkitRequestFullscreen) {
+        await iframe.webkitRequestFullscreen();
+      }
+
+      // Attempt to lock orientation to landscape when in full screen
+      if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+        await window.screen.orientation.lock('landscape').catch(e => console.log("Orientation lock not supported"));
+      }
+    } catch (err) {
+      console.error("Full screen failed", err);
     }
   };
 
-  const handleDownload = (id, type = 'y2mate') => {
-    if(type === 'y2mate') {
-      window.open(`https://www.y2mate.com/youtube/${id}`, '_blank');
-    } else {
-      window.open(`https://9xbuddy.com/process?url=https://www.youtube.com/watch?v=${id}`, '_blank');
-    }
+  const handleDownload = (id) => {
+    // Switching to ssyoutube as requested
+    window.open(`https://www.ssyoutube.com/watch?v=${id}`, '_blank');
   };
 
   return (
@@ -136,10 +140,9 @@ export default function App() {
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Fast Loading...</p>
                 </div>
               )}
-              {/* Added playsinline and picture-in-picture for background attempt */}
               <iframe 
                 id="player-frame"
-                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1&showinfo=0&vq=hd720&playsinline=1`}
+                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1&showinfo=0&vq=hd720&playsinline=0`}
                 className="absolute inset-0 w-full h-full"
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
@@ -147,12 +150,12 @@ export default function App() {
                 onLoad={() => setVideoLoading(false)}
               />
               
-              {/* FullScreen Button for Mobile Rotation Fix */}
+              {/* FullScreen Button with Auto-Rotate Logic */}
               <button 
                 onClick={toggleFullScreen}
-                className="absolute bottom-4 right-4 z-20 bg-black/60 p-2 rounded-full border border-white/20 md:hidden"
+                className="absolute bottom-12 right-4 z-20 bg-red-600/80 p-3 rounded-full border border-white/20 md:hidden shadow-lg animate-pulse"
               >
-                <Maximize2 size={16} />
+                <Maximize2 size={20} />
               </button>
             </div>
             
@@ -166,10 +169,10 @@ export default function App() {
               </div>
               <div className="flex flex-wrap gap-2 w-full md:w-auto">
                 <button 
-                  onClick={() => handleDownload(currentVideo.id, 'y2mate')}
+                  onClick={() => handleDownload(currentVideo.id)}
                   className="flex-1 md:flex-none bg-white text-black hover:bg-zinc-200 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition active:scale-95"
                 >
-                  <Download size={14} /> Download Music
+                  <Download size={14} /> Download with ssyoutube
                 </button>
               </div>
             </div>
@@ -184,13 +187,12 @@ export default function App() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 md:px-0">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="aspect-video bg-zinc-900 md:rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
-          /* Mobile: 1 Column, Tablet: 2, Desktop: 3 for massive thumbnails */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10 md:gap-x-6">
             {videos.map((v) => (
               <div 
