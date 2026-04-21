@@ -5,10 +5,7 @@ import {
   Download, 
   Send, 
   AlertTriangle,
-  ExternalLink,
-  ChevronDown,
   Smartphone,
-  Maximize,
   Loader2
 } from 'lucide-react';
 
@@ -47,7 +44,7 @@ export default function App() {
 
     setLoading(true);
     const activeKey = API_KEYS[keyIndex];
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=18&q=${encodeURIComponent(query)}&type=video&key=${activeKey}`;
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=${encodeURIComponent(query)}&type=video&key=${activeKey}`;
 
     try {
         const res = await fetch(url);
@@ -78,9 +75,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDownload = (id) => {
-    // Better Direct Downloader for Music/Video
-    window.open(`https://www.y2mate.com/youtube/${id}`, '_blank');
+  const handleDownload = (id, type = 'y2mate') => {
+    if(type === 'y2mate') {
+      window.open(`https://www.y2mate.com/youtube/${id}`, '_blank');
+    } else {
+      window.open(`https://9xbuddy.com/process?url=https://www.youtube.com/watch?v=${id}`, '_blank');
+    }
   };
 
   return (
@@ -125,7 +125,7 @@ export default function App() {
 
         {currentVideo ? (
           <section className="mb-8 animate-in fade-in duration-500">
-            {/* Player Container - Speed Optimized */}
+            {/* Player Container */}
             <div className="relative w-full aspect-video bg-black md:rounded-2xl overflow-hidden border-b md:border border-white/5 shadow-2xl">
               {videoLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-10">
@@ -134,7 +134,7 @@ export default function App() {
                 </div>
               )}
               <iframe 
-                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&modestbranding=1&showinfo=0&rel=0&iv_load_policy=3&vq=hd720`}
+                src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1&showinfo=0&vq=hd1080`}
                 className="absolute inset-0 w-full h-full"
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
@@ -151,57 +151,64 @@ export default function App() {
                   {currentVideo.channel}
                 </p>
               </div>
-              <div className="flex gap-2 w-full md:w-auto">
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
                 <button 
-                  onClick={() => handleDownload(currentVideo.id)}
-                  className="flex-1 md:flex-none bg-zinc-900 hover:bg-zinc-800 border border-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition active:scale-95"
+                  onClick={() => handleDownload(currentVideo.id, 'y2mate')}
+                  className="flex-1 md:flex-none bg-white text-black hover:bg-zinc-200 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition active:scale-95"
                 >
                   <Download size={14} /> Download Music
+                </button>
+                <button 
+                  onClick={() => handleDownload(currentVideo.id, '9xbuddy')}
+                  className="flex-1 md:flex-none bg-zinc-900 hover:bg-zinc-800 border border-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition active:scale-95"
+                >
+                   Backup
                 </button>
               </div>
             </div>
           </section>
         ) : (
-           <div className="hidden md:block py-10"></div>
+           <div className="hidden md:block py-6"></div>
         )}
 
         <div className="flex items-center gap-2 mb-6 px-4">
           <div className="w-1 h-5 bg-red-600 rounded-full" />
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Recommended Tracks</h2>
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Up Next / Trending</h2>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 px-2 md:px-0">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="aspect-video bg-zinc-900 rounded-xl animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-0 md:px-0">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="aspect-video bg-zinc-900 md:rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-2 md:gap-x-4 gap-y-6 px-2 md:px-0">
+          /* Grid updated: 1 column on mobile, 2 on tablet, 3 on desktop for larger thumbnails */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-8 md:gap-x-6 md:gap-y-10">
             {videos.map((v) => (
               <div 
                 key={v.id.videoId} 
                 onClick={() => selectVideo(v)} 
                 className="group cursor-pointer text-left"
               >
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-900 border border-white/5 shadow-lg group-hover:shadow-red-600/10 transition duration-500">
+                <div className="relative aspect-video md:rounded-xl overflow-hidden bg-zinc-900 border-y md:border border-white/5 shadow-lg group-hover:shadow-red-600/10 transition duration-500">
                   <img 
-                    src={v.snippet.thumbnails.medium.url} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700 grayscale-[0.3] group-hover:grayscale-0" 
+                    src={v.snippet.thumbnails.high ? v.snippet.thumbnails.high.url : v.snippet.thumbnails.medium.url} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-700 grayscale-[0.2] group-hover:grayscale-0" 
                     alt=""
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
-                    <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-xl transform translate-y-2 group-hover:translate-y-0 transition duration-500">
-                       <Play size={16} fill="white" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
+                    <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-xl transform translate-y-4 group-hover:translate-y-0 transition duration-500">
+                       <Play size={20} fill="white" />
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 px-1">
-                  <h3 className="text-[10px] md:text-[11px] font-black line-clamp-2 leading-tight group-hover:text-red-500 transition uppercase italic tracking-tighter">
+                <div className="mt-3 px-4 md:px-1">
+                  <h3 className="text-sm md:text-base font-black line-clamp-2 leading-tight group-hover:text-red-500 transition uppercase italic tracking-tighter">
                     {v.snippet.title}
                   </h3>
-                  <p className="text-[8px] text-zinc-600 mt-1 uppercase font-bold tracking-widest truncate">{v.snippet.channelTitle}</p>
+                  <p className="text-[10px] text-zinc-500 mt-1 uppercase font-bold tracking-widest truncate">{v.snippet.channelTitle}</p>
                 </div>
               </div>
             ))}
@@ -218,7 +225,7 @@ export default function App() {
             </a>
             <span className="hidden md:block text-zinc-800">|</span>
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-              Server Status: <span className="text-green-500">Online</span> ({currentKeyIndex + 1}/{API_KEYS.length})
+              Server Status: <span className="text-green-500">Online</span>
             </p>
           </div>
           <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">© 2024 RKB PRO PLAYER EXPERIENCE</p>
@@ -234,7 +241,6 @@ export default function App() {
         
         iframe { background: black; }
         
-        /* Skeleton Animation */
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: .5; }
