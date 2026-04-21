@@ -21,7 +21,7 @@ const API_KEYS = [
 ];
 
 const TELEGRAM_URL = "https://t.me/bug_cash";
-const APK_DOWNLOAD_URL = "https://github.com/rakib2525/ytvedo/releases/download/v1.0/app-debug.apk";
+const APK_DOWNLOAD_URL = "https://t.me/ytvedo/2";
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
